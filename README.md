@@ -9,3 +9,5 @@ Building a Max for Live device that analyzes audio in the following ways:
 - Spectral: centroid
 - Fundamental Frequency Estimation
 - Stuff with fast fourier transform (fft)
+
+And communicates this information to generate visuals within Allolib (via OSC) & jitter 
