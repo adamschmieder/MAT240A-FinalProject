@@ -34,7 +34,5 @@ _**"Lines" Shape:**_
 - Color mode changes if onset in band 1
 **Presence Detection:**
 - Changes draw mode according to presence of bands 5 and 6. More complex drawing modes are chosen for higher presences, and vice versa
--
-
 
 
