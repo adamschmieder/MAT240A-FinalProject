@@ -1,4 +1,4 @@
-outlets = 21;
+outlets = 25;
 autowatch = 1;
 var buffer = new Buffer("METER");
 
@@ -13,6 +13,15 @@ var list_uhmidm_prev = new Array();
 var list_highm_prev = new Array();
 var list_uhighm_prev = new Array();
 
+var clocker = 0;
+var presence = new Array();
+var presenceAvg = 0;
+var ps = 5;
+var presenceVal = 0;
+
+var volume = 0;
+var volumeVal = 0;
+
 var lbassm_bang = false;
 var bassm_bang = false;
 var lmidm_bang = false;
@@ -22,6 +31,7 @@ var hmidm_bang = false;
 var uhmidm_bang = false;
 var highm_bang = false;
 var uhighm_bang = false;
+
 
 var ls = 3;
 var las = ls - 1;
@@ -196,12 +206,78 @@ function bang() {
 		list_lbassm_prev.pop();
 	}
 
-  if(highm_bang == true && uhmidm_bang == true && hmidm_bang == true && umidm_bang == true && midm_bang == true) {
+  if(highm_bang && uhmidm_bang && hmidm_bang && umidm_bang) {
 	outlet(19, 'bang');
 	}
-  if(highm_bang == true && uhmidm_bang == true && hmidm_bang == true) {
+  if((highm_bang && uhmidm_bang && hmidm_bang) || (umidm_bang && hmidm_bang && uhmidm_bang) || (midm_bang && umidm_bang && hmidm_bang)) {
 	outlet(20, 'bang');
 	}
+  if(bassm_bang && lmidm_bang && midm_bang) {
+	outlet(21, 'bang');
+	}
+  if(presence.length == 0)
+		presence.unshift(clocker);
+  if((uhmidm_bang && hmidm_bang) || (umidm_bang && hmidm_bang)) {
+	if(presence.length < ps) {
+		presence.unshift(clocker);
+	}
+	else if(clocker > 0) {
+		presence.unshift(clocker);
+		presence.pop();
+	}
+    clocker = 0;
+  }
+  else {
+	clocker = clocker + 1;
+  }
+  for(var x = 0; x < presence.length; x++)
+  {
+	presenceAvg = presenceAvg + presence[x];
+  }
+  presenceAvg = presenceAvg/presence.length;
+
+  switch(true) {
+	case (presenceAvg < 200):
+		presenceVal = 3;
+		break; 
+	case ((presenceAvg >= 200) && (presenceAvg < 450)):
+		presenceVal = 2;
+		break; 
+	case (presenceAvg >= 450):
+		presenceVal = 1;
+		break; 
+	default:
+		break;
+  }
+  if((uhmidm_bang && hmidm_bang) || (umidm_bang && hmidm_bang))
+  	outlet(22, presenceVal);
+  //post(presenceAvg);
+  //post(presence[0]);
+
+  volume = (lbassm + bassm + lmidm + midm + umidm + hmidm + uhmidm + highm + uhighm)/9.0;
+  switch(true) {
+	case ((volume >= 0.0) && (volume < 0.2)):
+		volumeVal = 0;
+		break;
+	case ((volume >= 0.2) && (volume < 0.4)):
+		volumeVal = 1;
+		break;
+	case ((volume >= 0.4) && (volume < 0.5)):
+		volumeVal = 2;
+		break;
+	case ((volume >= 0.5) && (volume < 0.56)):
+		volumeVal = 4;
+		break;
+	case ((volume >= 0.56) && (volume < 0.7)):
+		volumeVal = 8;
+		break;
+	default:
+		break;
+  }
+  outlet(23, volumeVal);
+  outlet(24, volume);
+
+
 										
   outlet(0, list);
   outlet(1, lbassm);						// 	mean low bass
